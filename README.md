@@ -1,6 +1,6 @@
 # PULSE - Agentic Social Activity Curator
 
-**Rust + Flutter** implementation of STROLL - a voice-powered social activity discovery app.
+**Rust + Flutter** implementation of PULSE - a voice-powered social activity discovery app.
 
 ## V1 Scope Lock
 
