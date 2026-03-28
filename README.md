@@ -1,4 +1,4 @@
-# STROLL - Agentic Social Activity Curator
+# PULSE - Agentic Social Activity Curator
 
 **Rust + Flutter** implementation of STROLL - a voice-powered social activity discovery app.
 
