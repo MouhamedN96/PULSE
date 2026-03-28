@@ -1,0 +1,33 @@
+name: stroll
+version: 1.0.0+1
+publish_to: none
+description: STROLL - Agentic Social Activity Curator
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_rust_bridge: ^1.82.0
+  ffi: ^2.1.0
+  path_provider: ^2.1.4
+  http: ^1.2.2
+  cupertino_icons: ^1.0.6
+
+  # UI
+  google_fonts: ^6.1.0
+  url_launcher: ^6.3.0
+
+  # Voice
+  speech_to_text: ^6.4.0
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+
+flutter:
+  uses-material-design: true
