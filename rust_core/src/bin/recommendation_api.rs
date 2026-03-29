@@ -162,12 +162,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
 
     let port = std::env::var("PORT")
+        .or_else(|_| std::env::var("PULSE_API_PORT"))
         .or_else(|_| std::env::var("STROLL_API_PORT"))
         .ok()
         .and_then(|raw| raw.parse::<u16>().ok())
         .unwrap_or(8787);
     let db_path =
-        std::env::var("STROLL_DB_PATH").unwrap_or_else(|_| "stroll_v1.sqlite".to_string());
+        std::env::var("PULSE_DB_PATH")
+            .or_else(|_| std::env::var("STROLL_DB_PATH"))
+            .unwrap_or_else(|_| "pulse_v1.sqlite".to_string());
 
     let core = if db_path.trim().is_empty() {
         StrollCore::new()
@@ -197,7 +200,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
-    println!("STROLL robust API listening on http://{address}");
+    println!("PULSE API listening on http://{address}");
     axum::serve(listener, app).await?;
 
     Ok(())
@@ -966,7 +969,8 @@ fn build_summary_prompt(query: &str, activities: &[Activity], context: &str) -> 
 }
 
 fn default_provider_from_env() -> ProviderKind {
-    std::env::var("STROLL_AGENT_PROVIDER")
+    std::env::var("PULSE_AGENT_PROVIDER")
+        .or_else(|_| std::env::var("STROLL_AGENT_PROVIDER"))
         .ok()
         .as_deref()
         .and_then(ProviderKind::parse)
