@@ -176,7 +176,10 @@ class MockStrollRepository implements StrollRepository {
 }
 
 class ApiStrollRepository implements StrollRepository {
-  final String _baseUrl = 'https://pulse-production-62b2.up.railway.app/api';
+  // Use relative path for web (same-origin), absolute for native/local dev
+  final String _baseUrl = const bool.fromEnvironment('dart.library.html')
+      ? '/api'
+      : 'https://pulse-production-62b2.up.railway.app/api';
   
   @override
   RecommendationBackendStatus get recommendationBackendStatus =>

@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{net::SocketAddr, sync::Arc};
 use tower_http::cors::{Any, CorsLayer};
+use tower_http::services::{ServeDir, ServeFile};
 use stroll_core::{
     models::{
         Activity, ActivityCategory, AgentResponse, FeedResponse, FilterOption,
@@ -219,6 +220,10 @@ fn app_router(state: AppState) -> Router {
         .route("/api/users/follow", post(follow_user_handler))
         .route("/api/places/search", post(places_search_handler))
         .with_state(state)
+        .fallback_service(
+            ServeDir::new("static")
+                .not_found_service(ServeFile::new("static/index.html")),
+        )
 }
 
 async fn health() -> &'static str {
