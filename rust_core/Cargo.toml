@@ -18,7 +18,7 @@ flutter_rust_bridge = "1.82"
 rusqlite = { version = "0.31", features = ["bundled"] }
 axum = "0.7"
 dotenvy = "0.15"
-tower-http = { version = "0.6", features = ["cors"] }
+tower-http = { version = "0.6", features = ["cors", "fs"] }
 
 # For geospatial calculations
 geoutils = "0.5"
