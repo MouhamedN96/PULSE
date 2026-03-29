@@ -1,5 +1,19 @@
 # ── Stage 1: Build Flutter Web ──
-FROM ghcr.io/cirruslabs/flutter:3.27.4 AS flutter-builder
+FROM debian:bookworm-slim AS flutter-builder
+
+RUN apt-get update && apt-get install -y \
+    curl git unzip xz-utils zip libglu1-mesa ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV FLUTTER_VERSION=3.27.4
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH="${FLUTTER_HOME}/bin:${PATH}"
+
+RUN curl -fsSL "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz" \
+    | tar -xJ -C /opt
+
+RUN flutter config --no-analytics \
+    && flutter precache --web
 
 WORKDIR /app/flutter_app
 COPY flutter_app/ ./
