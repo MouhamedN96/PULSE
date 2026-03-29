@@ -176,7 +176,7 @@ class MockStrollRepository implements StrollRepository {
 }
 
 class ApiStrollRepository implements StrollRepository {
-  final String _baseUrl = 'http://127.0.0.1:8787/api';
+  final String _baseUrl = 'https://pulse-production-62b2.up.railway.app/api';
   
   @override
   RecommendationBackendStatus get recommendationBackendStatus =>
