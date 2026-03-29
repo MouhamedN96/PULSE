@@ -1,0 +1,14 @@
+# Ignore everything not needed for Rust build
+flutter_app/
+docs/
+scripts/
+stitch_welcome_to_stroll/
+.tooling/
+.env
+*.sqlite
+*.md
+.git/
+.gitignore
+
+# Rust build artifacts (don't copy local target)
+rust_core/target/
