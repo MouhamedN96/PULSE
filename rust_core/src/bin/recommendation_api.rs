@@ -161,7 +161,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load .env file (silently skip if not found)
     let _ = dotenvy::dotenv();
 
-    let port = std::env::var("STROLL_API_PORT")
+    let port = std::env::var("PORT")
+        .or_else(|_| std::env::var("STROLL_API_PORT"))
         .ok()
         .and_then(|raw| raw.parse::<u16>().ok())
         .unwrap_or(8787);
@@ -193,7 +194,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .allow_methods(Any)
         .allow_headers(Any);
     let app = app.layer(cors);
-    let address = SocketAddr::from(([127, 0, 0, 1], port));
+    let address = SocketAddr::from(([0, 0, 0, 0], port));
     let listener = tokio::net::TcpListener::bind(address).await?;
 
     println!("STROLL robust API listening on http://{address}");
@@ -205,6 +206,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn app_router(state: AppState) -> Router {
     Router::new()
         .route("/health", get(health))
+        .route("/api/health", get(health))
         .route("/api/recommend", post(recommend))
         .route("/api/feed", get(feed_handler))
         .route("/api/network", get(network_handler))
