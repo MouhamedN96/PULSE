@@ -187,4 +187,3 @@ MIT
 ---
 
 Built with Rust 🦀 + Flutter 💙 + Gemini ✨
-]]>
