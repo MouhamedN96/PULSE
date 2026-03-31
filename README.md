@@ -1,238 +1,191 @@
-# PULSE - Agentic Social Activity Curator
+<![CDATA[# PULSE ⚡
 
-**Rust + Flutter** implementation of PULSE - a voice-powered social activity discovery app.
+**AI-powered social activity discovery — find what's happening around you.**
 
-## V1 Scope Lock
+> Live at [pulse-production-62b2.up.railway.app](https://pulse-production-62b2.up.railway.app)
 
-V1 ships from this stack only (`rust_core + flutter_app`).
+PULSE is a PWA that curates nearby restaurants, nightlife, and activities using the Google Places API and Gemini AI. Ask it anything — *"best rooftop bars near me"* — and get smart, distance-aware recommendations with one-tap navigation.
 
-- Included: Feed, Voice Agent (voice/text query), Links, Explore, Profile (read-only + local toggles)
-- Excluded: camera/image analysis, maps actions, push notifications, auth/backend sync, web parity
+---
 
-## Features
+## What It Does
 
-🎙️ **Voice Agent** - Natural language queries for activity discovery  
-📰 **Personalized Feed** - Activity recommendations + social posts  
-👥 **Social Network** - Follow friends and review requests  
-🔎 **Explore** - Trending activities with category filters  
-🤖 **AI-Powered** - Intent parsing and summary generation  
+- 🔍 **Live Search** — Fetches real venues via Google Places API (New) based on your location
+- 🤖 **AI Summaries** — Gemini generates a quick recommendation blurb for each search
+- 📍 **Distance-Aware** — Every card shows how far the venue is from you (Haversine)
+- 🏷️ **Smart Filters** — Nearby · Food · Nightlife · custom searches
+- 🧭 **One-Tap Navigation** — Open directions in Google Maps or Waze
+- ⭐ **Ratings & Reviews** — Real Google ratings, price levels, and review counts
+- 👥 **Social Network** — Follow friends, discover people, manage requests
+- 🎙️ **Voice Agent** — Natural language activity queries
+
+---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | Flutter + Dart |
-| Business Logic | Rust |
-| FFI Bridge | Typed native bridge (`stroll_*` C ABI over Rust core) |
-| State Management | Screen-local state + repository abstraction |
-| UI Components | Material 3 |
+| Layer | Tech |
+|-------|------|
+| **Frontend** | Flutter (Dart) — PWA, Material 3 |
+| **Backend** | Rust (Axum) — serves API + static PWA |
+| **AI** | Gemini 2.0 Flash — summaries & intent parsing |
+| **Places** | Google Places API (New) — live venue data |
+| **Infra** | Railway (Docker) — single-container deploy |
+| **Database** | PostgreSQL (Railway managed) |
+| **Cache** | Redis (Railway managed) |
+
+---
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────┐
+│                   Railway                        │
+│                                                  │
+│  ┌────────────────────────────────────────────┐  │
+│  │         Rust / Axum Server                 │  │
+│  │                                            │  │
+│  │  GET /           → Flutter PWA (static/)   │  │
+│  │  GET /api/health → Health check            │  │
+│  │  GET /api/feed   → Google Places + AI      │  │
+│  │  POST /api/recommend → Voice agent         │  │
+│  │  GET /api/network    → Social graph        │  │
+│  │  GET /api/trending   → Explore             │  │
+│  └────────────────────────────────────────────┘  │
+│         │                    │                    │
+│    ┌────┴────┐         ┌────┴────┐               │
+│    │ Postgres│         │  Redis  │               │
+│    └─────────┘         └─────────┘               │
+└──────────────────────────────────────────────────┘
+         │                    │
+   ┌─────┴─────┐       ┌─────┴─────┐
+   │  Google   │       │  Gemini   │
+   │ Places API│       │  2.0 Flash│
+   └───────────┘       └───────────┘
+```
+
+---
 
 ## Quick Start
 
 ### Prerequisites
 
-```bash
-# Install Rust
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+- [Rust](https://rustup.rs/) 1.85+
+- [Flutter](https://docs.flutter.dev/get-started/install) 3.27+
+- Google Cloud API key with **Places API (New)** enabled
 
-# Install Flutter
-# https://docs.flutter.dev/get-started/install
-
-# Clone repository
-git clone https://github.com/yourusername/stroll.git
-cd stroll
-
-# Build Rust core
-cd rust_core
-cargo build --release
-
-# Run Flutter app
-cd ../flutter_app
-flutter pub get
-flutter run
-```
-
-### Optional Recommendation API
+### Local Development
 
 ```bash
+# Clone
+git clone https://github.com/MouhamedN96/PULSE.git
+cd PULSE
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your API keys
+
+# Run Rust backend
 cd rust_core
 cargo run --bin recommendation_api
+# → PULSE API listening on http://0.0.0.0:8787
+
+# In another terminal — run Flutter
+cd flutter_app
+flutter pub get
+flutter run -d chrome
 ```
 
-Environment variables:
-- `STROLL_API_PORT` (default: `8787`)
-- `STROLL_DB_PATH` (default: `stroll_v1.sqlite`)
-- `STROLL_AGENT_PROVIDER` (`local`, `openrouter`, `huggingface`, `gemini`; default: `local`)
-- `OPENROUTER_API_KEY` / `OPENROUTER_MODEL` (default: `liquid/lfm-2.5-1.2b-instruct:free`)
-- `HUGGINGFACE_API_KEY` / `HUGGINGFACE_MODEL` / `HUGGINGFACE_ENDPOINT`
-- `GEMINI_API_KEY` / `GEMINI_MODEL` (default: `gemini-2.0-flash`) / `GEMINI_ENDPOINT`
+### Environment Variables
 
-Example call:
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `GOOGLE_PLACES_API_KEY` | ✅ | — | Google Cloud key with Places API (New) enabled |
+| `GEMINI_API_KEY` | ✅ | — | Gemini API key for AI summaries |
+| `PULSE_AGENT_PROVIDER` | — | `local` | AI provider: `local`, `openrouter`, `huggingface`, `gemini` |
+| `PULSE_API_PORT` | — | `8787` | Server port (Railway injects `PORT` automatically) |
+| `PULSE_DB_PATH` | — | `pulse_v1.sqlite` | SQLite database path |
+| `DATABASE_URL` | — | — | PostgreSQL connection string (auto-injected by Railway) |
+| `REDIS_URL` | — | — | Redis connection string (auto-injected by Railway) |
 
-```bash
-curl -X POST http://127.0.0.1:8787/api/recommend \
-  -H "Content-Type: application/json" \
-  -d '{"query":"Find Spanish dinner nearby","lat":31.23,"lng":121.47,"provider":"local"}'
-```
+---
 
-To make Flutter Voice Agent call this API, run Flutter with:
+## Deploy to Railway
 
-```bash
-flutter run --dart-define=STROLL_RECOMMEND_API_BASE_URL=http://127.0.0.1:8787
-```
+1. **Fork & connect** — Link [github.com/MouhamedN96/PULSE](https://github.com/MouhamedN96/PULSE) to a Railway project
+2. **Add databases** — Click **+ New** → add **PostgreSQL** and **Redis** services
+3. **Set variables** — In the PULSE service → Variables tab:
+   ```
+   GOOGLE_PLACES_API_KEY=your_key
+   GEMINI_API_KEY=your_key
+   PULSE_AGENT_PROVIDER=gemini
+   ```
+4. **Generate domain** — Settings → Networking → Generate Domain
+5. **Done** — Railway auto-builds on push using the 3-stage Dockerfile
 
-Voice Agent now shows a backend badge (`API` or `FFI`) so you can verify the active path during local testing.
+The Dockerfile handles everything:
+- **Stage 1**: Builds Flutter web app (`flutter build web`)
+- **Stage 2**: Compiles Rust binary (`cargo build --release`)
+- **Stage 3**: Slim Debian runtime with both artifacts
 
-## Architecture
-
-```
-┌─────────────────┐     FFI      ┌─────────────────┐
-│  Flutter UI     │ ◄──────────► │   Rust Core     │
-│  - Screens      │   (bridge)   │   - Models      │
-│  - Widgets      │              │   - Agent       │
-│  - State        │              │   - Engine      │
-└─────────────────┘              └─────────────────┘
-```
-
-## Screenshots
-
-| Feed | Voice Agent | Results |
-|------|-------------|---------|
-| ![Feed](docs/screens/feed.png) | ![Agent](docs/screens/agent.png) | ![Results](docs/screens/results.png) |
+---
 
 ## Project Structure
 
 ```
-stroll/
-├── rust_core/              # Rust business logic
+PULSE/
+├── rust_core/                  # Rust backend
 │   ├── src/
-│   │   ├── lib.rs         # Main library
-│   │   ├── models.rs      # Data structures
-│   │   ├── agent.rs       # Voice query processing
-│   │   ├── recommendations.rs
-│   │   └── social.rs
+│   │   ├── lib.rs              # Core library (models, engine, social)
+│   │   └── bin/
+│   │       └── recommendation_api.rs  # Axum HTTP server
 │   └── Cargo.toml
 │
-├── flutter_app/
+├── flutter_app/                # Flutter PWA
 │   ├── lib/
-│   │   ├── bridge/        # FFI bridge
-│   │   ├── presentation/  # UI screens
-│   │   └── core/          # Theme, utils
+│   │   ├── main.dart           # App entry point
+│   │   ├── core/theme/         # Material 3 theme
+│   │   ├── data/               # Repository + models
+│   │   └── presentation/
+│   │       └── screens/        # Feed, Explore, Network, Profile
+│   ├── web/                    # PWA manifest + index.html
 │   └── pubspec.yaml
 │
-└── docs/
-    └── ARCHITECTURE.md
+├── Dockerfile                  # 3-stage build (Flutter + Rust + runtime)
+├── railway.toml                # Railway deployment config
+├── .dockerignore
+└── .env                        # Local environment config (not committed)
 ```
-
-## Key Features
-
-### Voice-to-Activity Flow
-
-1. User speaks: *"Find Italian brunch nearby"*
-2. Flutter captures audio → Speech-to-text
-3. Dart calls Rust via FFI
-4. Rust parses intent: `{ category: Food, subcategory: Italian }`
-5. Rust queries activities, applies filters
-6. Rust generates AI summary
-7. Flutter displays results with cards
-
-### Social Features
-
-- **My Network** - See who you follow
-- **Discover** - Find people with similar interests
-- **Requests** - Accept/decline connection requests
-- **Feed** - See what your network is up to
-
-## API Reference
-
-### Rust Core Functions
-
-```rust
-// Initialize
-pub fn create_stroll_core() -> StrollCore;
-pub fn init_with_mock_data(&self);
-
-// Voice queries
-pub async fn process_voice_query(
-    &self,
-    query: String,
-    location: Option<GeoLocation>,
-) -> Result<AgentResponse, StrollError>;
-
-// Feed
-pub async fn get_personalized_feed(&self) -> Result<FeedResponse, StrollError>;
-
-// Social
-pub async fn get_network(&self) -> Result<NetworkResponse, StrollError>;
-pub async fn follow_user(&self, user_id: String) -> Result<(), StrollError>;
-pub async fn get_trending(&self, category: Option<String>) -> Result<Vec<Activity>, StrollError>;
-pub async fn save_activity(&self, activity_id: String) -> Result<(), StrollError>;
-pub async fn get_saved_activities(&self) -> Result<Vec<Activity>, StrollError>;
-```
-
-### Native Bridge Exports
-
-The Flutter app consumes the Rust core through typed envelope responses:
-
-- `stroll_create_core`
-- `stroll_init_mock_data`
-- `stroll_process_voice_query`
-- `stroll_get_personalized_feed`
-- `stroll_get_network`
-- `stroll_follow_user`
-- `stroll_get_trending`
-- `stroll_save_activity`
-- `stroll_get_saved_activities`
-- `stroll_free_string`
-
-## Testing and Release Gates
-
-### One-command local scripts
-
-```bash
-# Run full Rust + Flutter gates
-./scripts/v1-gates.sh
-
-# Install local Flutter SDK (if missing) and run Flutter gates
-./scripts/flutter-gates-bootstrap.sh
-```
-
-```powershell
-# Run full Rust + Flutter gates
-powershell -ExecutionPolicy Bypass -File .\scripts\v1-gates.ps1
-
-# Install local Flutter SDK (if missing) and run Flutter gates
-powershell -ExecutionPolicy Bypass -File .\scripts\flutter-gates-bootstrap.ps1
-```
-
-### Rust
-
-```bash
-cargo fmt --check
-cargo clippy -- -D warnings
-cargo test
-```
-
-### Flutter
-
-```bash
-flutter analyze
-flutter test
-flutter test integration_test
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests: `cargo test && flutter test`
-5. Submit a pull request
-
-## License
-
-MIT License - see LICENSE file
 
 ---
 
-Built with 💜 using Rust + Flutter
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/health` | Health check → `ok` |
+| `GET` | `/api/feed?lat=40.7&lng=-74.0&query=bars` | Live venue feed (Google Places + distance) |
+| `POST` | `/api/recommend` | Voice/text query → AI-curated results |
+| `GET` | `/api/trending?category=food` | Trending activities by category |
+| `GET` | `/api/network` | Social network (following, discover, requests) |
+| `POST` | `/api/users/follow` | Follow/unfollow a user |
+| `POST` | `/api/places/search` | Direct Google Places search |
+
+---
+
+## Contributing
+
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Push and open a PR
+
+---
+
+## License
+
+MIT
+
+---
+
+Built with Rust 🦀 + Flutter 💙 + Gemini ✨
+]]>
