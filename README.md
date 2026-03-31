@@ -1,4 +1,4 @@
-<![CDATA[# PULSE ⚡
+PULSE ⚡
 
 **AI-powered social activity discovery — find what's happening around you.**
 
@@ -6,7 +6,6 @@
 
 PULSE is a PWA that curates nearby restaurants, nightlife, and activities using the Google Places API and Gemini AI. Ask it anything — *"best rooftop bars near me"* — and get smart, distance-aware recommendations with one-tap navigation.
 
----
 
 ## What It Does
 
