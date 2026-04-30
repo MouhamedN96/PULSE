@@ -43,4 +43,5 @@ Thumbs.db
 docs/~$*.pptx
 experiments/fixtures/*.json
 experiments/logs/
-experiments/results/*.json
+experiments/results/*
+!experiments/results/.gitkeep
