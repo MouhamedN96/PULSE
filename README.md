@@ -1,4 +1,4 @@
-PULSE ⚡
+PULSE 
 
 **AI-powered social activity discovery — find what's happening around you.**
 
@@ -9,14 +9,14 @@ PULSE is a PWA that curates nearby restaurants, nightlife, and activities using 
 
 ## What It Does
 
-- 🔍 **Live Search** — Fetches real venues via Google Places API (New) based on your location
-- 🤖 **AI Summaries** — Gemini generates a quick recommendation blurb for each search
-- 📍 **Distance-Aware** — Every card shows how far the venue is from you (Haversine)
-- 🏷️ **Smart Filters** — Nearby · Food · Nightlife · custom searches
-- 🧭 **One-Tap Navigation** — Open directions in Google Maps or Waze
-- ⭐ **Ratings & Reviews** — Real Google ratings, price levels, and review counts
-- 👥 **Social Network** — Follow friends, discover people, manage requests
-- 🎙️ **Voice Agent** — Natural language activity queries
+-  **Live Search** — Fetches real venues via Google Places API (New) based on your location
+-  **AI Summaries** — Gemini generates a quick recommendation blurb for each search
+-  **Distance-Aware** — Every card shows how far the venue is from you (Haversine)
+-  **Smart Filters** — Nearby · Food · Nightlife · custom searches
+-  **One-Tap Navigation** — Open directions in Google Maps or Waze
+-  **Ratings & Reviews** — Real Google ratings, price levels, and review counts
+-  **Social Network** — Follow friends, discover people, manage requests
+-  **Voice Agent** — Natural language activity queries
 
 ---
 
