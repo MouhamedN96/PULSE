@@ -55,7 +55,9 @@ class UserCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 2,
                   children: [
                     Text(
                       '${user.followers} followers',
@@ -64,7 +66,6 @@ class UserCard extends StatelessWidget {
                         fontSize: 12,
                       ),
                     ),
-                    const SizedBox(width: 12),
                     Text(
                       '${user.checkins} check-ins',
                       style: TextStyle(

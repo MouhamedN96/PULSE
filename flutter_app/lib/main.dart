@@ -16,11 +16,12 @@ Future<void> main() async {
   final repository = AppServices.repository;
   String? startupError;
   const recommendationApiBaseUrl =
-      String.fromEnvironment('STROLL_RECOMMEND_API_BASE_URL', defaultValue: 'http://127.0.0.1:8787');
+      String.fromEnvironment('STROLL_RECOMMEND_API_BASE_URL', defaultValue: '');
 
   try {
     await repository.initialize(
-      recommendationApiBaseUrl: recommendationApiBaseUrl.trim().isEmpty ? 'http://127.0.0.1:8787' : recommendationApiBaseUrl,
+      recommendationApiBaseUrl:
+          recommendationApiBaseUrl.trim().isEmpty ? null : recommendationApiBaseUrl,
     );
   } catch (error) {
     startupError = error.toString();

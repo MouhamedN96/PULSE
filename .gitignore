@@ -1,5 +1,12 @@
 # Secrets
 .env
+.env.*
+!.env.example
+flutter_app/.dev.vars
+flutter_app/.env
+flutter_app/.env.*
+rust_core/.env
+rust_core/.env.*
 
 # Rust
 rust_core/target/
@@ -12,6 +19,8 @@ flutter_app/build/
 flutter_app/.flutter-plugins
 flutter_app/.flutter-plugins-dependencies
 flutter_app/pubspec.lock
+flutter_app/node_modules/
+flutter_app/.wrangler/
 
 # SQLite
 *.sqlite
@@ -28,3 +37,7 @@ Thumbs.db
 
 # Tooling
 .tooling/
+
+# Local logs and temp files
+*.log
+docs/~$*.pptx

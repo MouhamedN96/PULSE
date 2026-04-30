@@ -2,6 +2,30 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'stroll_models.dart';
 
+const _remoteApiBaseUrl = 'https://pulse-production-62b2.up.railway.app/api';
+
+String _defaultApiBaseUrl() {
+  if (const bool.fromEnvironment('dart.library.html')) {
+    return '/api';
+  }
+
+  return _remoteApiBaseUrl;
+}
+
+String _normalizeApiBaseUrl(String? rawBaseUrl) {
+  final trimmed = rawBaseUrl?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return _defaultApiBaseUrl();
+  }
+
+  final normalized = trimmed.replaceFirst(RegExp(r'/+$'), '');
+  if (normalized.endsWith('/api')) {
+    return normalized;
+  }
+
+  return '$normalized/api';
+}
+
 class StrollAppException implements Exception {
   StrollAppException({required this.code, required this.message});
 
@@ -176,28 +200,124 @@ class MockStrollRepository implements StrollRepository {
 }
 
 class ApiStrollRepository implements StrollRepository {
-  // Use relative path for web (same-origin), absolute for native/local dev
-  final String _baseUrl = const bool.fromEnvironment('dart.library.html')
-      ? '/api'
-      : 'https://pulse-production-62b2.up.railway.app/api';
-  
-  @override
-  RecommendationBackendStatus get recommendationBackendStatus =>
-      const RecommendationBackendStatus(mode: RecommendationBackendMode.api, label: 'API', detail: 'Connected to Rust Server');
+  ApiStrollRepository({
+    http.Client? client,
+    String? initialBaseUrl,
+  })  : _client = client ?? http.Client(),
+        _baseUrl = _normalizeApiBaseUrl(initialBaseUrl);
+
+  final http.Client _client;
+  String _baseUrl;
 
   @override
-  Future<void> initialize({String? recommendationApiBaseUrl}) async {}
+  RecommendationBackendStatus get recommendationBackendStatus =>
+      RecommendationBackendStatus(
+        mode: RecommendationBackendMode.api,
+        label: 'API',
+        detail: _baseUrl,
+      );
+
+  @override
+  Future<void> initialize({String? recommendationApiBaseUrl}) async {
+    _baseUrl = _normalizeApiBaseUrl(recommendationApiBaseUrl);
+  }
+
+  Uri _buildUri(String path, {Map<String, String>? queryParameters}) {
+    return Uri.parse('$_baseUrl$path').replace(queryParameters: queryParameters);
+  }
+
+  Future<Map<String, dynamic>> _getJsonMap(
+    String path, {
+    Map<String, String>? queryParameters,
+  }) async {
+    final response = await _client.get(
+      _buildUri(path, queryParameters: queryParameters),
+    );
+
+    if (response.statusCode != 200) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'GET $path failed: ${response.statusCode}',
+      );
+    }
+
+    return asJsonMap(jsonDecode(response.body));
+  }
+
+  Future<List<dynamic>> _getJsonList(
+    String path, {
+    Map<String, String>? queryParameters,
+  }) async {
+    final response = await _client.get(
+      _buildUri(path, queryParameters: queryParameters),
+    );
+
+    if (response.statusCode != 200) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'GET $path failed: ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'GET $path returned an unexpected payload',
+      );
+    }
+
+    return decoded;
+  }
+
+  Future<Map<String, dynamic>> _postJsonMap(
+    String path, {
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _client.post(
+      _buildUri(path),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'POST $path failed: ${response.statusCode}',
+      );
+    }
+
+    return asJsonMap(jsonDecode(response.body));
+  }
+
+  Future<void> _postExpectSuccess(
+    String path, {
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _client.post(
+      _buildUri(path),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'POST $path failed: ${response.statusCode}',
+      );
+    }
+  }
 
   @override
   Future<FeedResponseModel> getFeed() async {
-    // Pass default location (NYC) so the backend fetches live Google Places
-    final response = await http.get(
-      Uri.parse('$_baseUrl/feed?lat=40.7128&lng=-74.0060'),
+    final decoded = await _getJsonMap(
+      '/feed',
+      queryParameters: const {
+        'lat': '40.7128',
+        'lng': '-74.0060',
+      },
     );
-    if (response.statusCode == 200) {
-      return FeedResponseModel.fromJson(jsonDecode(response.body));
-    }
-    throw StrollAppException(code: 'API_ERROR', message: 'Failed to load feed: ${response.statusCode}');
+    return FeedResponseModel.fromJson(decoded);
   }
 
   @override
@@ -213,69 +333,52 @@ class ApiStrollRepository implements StrollRepository {
       'lng': location?.lng ?? -74.0060,
       if (provider != null) 'provider': provider,
     };
-    final response = await http.post(
-      Uri.parse('$_baseUrl/recommend'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(body),
-    );
-    if (response.statusCode == 200) {
-      return AgentResponseModel.fromJson(jsonDecode(response.body));
-    }
-    throw StrollAppException(code: 'API_ERROR', message: 'Failed to process query: ${response.statusCode}');
+    final decoded = await _postJsonMap('/recommend', body: body);
+    return AgentResponseModel.fromJson(decoded);
   }
 
   @override
   Future<NetworkResponseModel> getNetwork() async {
-    final response = await http.get(Uri.parse('$_baseUrl/network'));
-    if (response.statusCode == 200) {
-      return NetworkResponseModel.fromJson(jsonDecode(response.body));
-    }
-    throw StrollAppException(code: 'API_ERROR', message: 'Failed to get network');
+    final decoded = await _getJsonMap('/network');
+    return NetworkResponseModel.fromJson(decoded);
   }
 
   @override
   Future<void> followUser(String userId) async {
-    await http.post(
-      Uri.parse('$_baseUrl/users/follow'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'user_id': userId}),
-    );
+    await _postExpectSuccess('/users/follow', body: {'user_id': userId});
   }
 
   @override
   Future<List<ActivityModel>> getTrending({String? category}) async {
-    final uri = Uri.parse('$_baseUrl/trending').replace(
+    final decoded = await _getJsonList(
+      '/trending',
       queryParameters: category != null ? {'category': category} : null,
     );
-    final response = await http.get(uri);
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((x) => ActivityModel.fromJson(x)).toList();
-    }
-    throw StrollAppException(code: 'API_ERROR', message: 'Failed to get trending');
+    return decoded
+        .map((entry) => ActivityModel.fromJson(asJsonMap(entry)))
+        .toList(growable: false);
   }
 
   @override
   Future<void> saveActivity(String activityId) async {
-    await http.post(
-      Uri.parse('$_baseUrl/activities/save'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'activity_id': activityId}),
+    await _postExpectSuccess(
+      '/activities/save',
+      body: {'activity_id': activityId},
     );
   }
 
   @override
   Future<List<ActivityModel>> getSavedActivities() async {
-    final response = await http.get(Uri.parse('$_baseUrl/activities/saved'));
-    if (response.statusCode == 200) {
-      final List data = jsonDecode(response.body);
-      return data.map((x) => ActivityModel.fromJson(x)).toList();
-    }
-    throw StrollAppException(code: 'API_ERROR', message: 'Failed to get saved activities');
+    final decoded = await _getJsonList('/activities/saved');
+    return decoded
+        .map((entry) => ActivityModel.fromJson(asJsonMap(entry)))
+        .toList(growable: false);
   }
 
   @override
-  Future<void> dispose() async {}
+  Future<void> dispose() async {
+    _client.close();
+  }
 }
 
 class AppServices {

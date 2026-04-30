@@ -6,8 +6,8 @@ class FakeStrollRepository implements StrollRepository {
 
   final bool shouldThrow;
   RecommendationBackendStatus _backendStatus = const RecommendationBackendStatus(
-    mode: RecommendationBackendMode.ffiFallback,
-    label: 'FFI',
+    mode: RecommendationBackendMode.mock,
+    label: 'MOCK',
     detail: 'Fake repository',
   );
 
@@ -89,7 +89,6 @@ class FakeStrollRepository implements StrollRepository {
 
   @override
   Future<void> initialize({
-    String? databasePath,
     String? recommendationApiBaseUrl,
   }) async {
     if (shouldThrow) {

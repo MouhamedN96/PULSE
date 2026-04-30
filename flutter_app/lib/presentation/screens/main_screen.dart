@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/stroll_repository.dart';
 import '../widgets/bottom_nav_bar.dart';
+import 'discover_world_screen.dart';
 import 'explore_screen.dart';
 import 'feed_screen.dart';
 import 'links_screen.dart';
@@ -29,7 +30,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _screens = [
-      FeedScreen(repository: widget.repository),
+      DiscoverWorldScreen(repository: widget.repository),
       LinksScreen(repository: widget.repository),
       ExploreScreen(repository: widget.repository),
       const ProfileScreen(),
@@ -86,11 +87,18 @@ class _MainScreenState extends State<MainScreen> {
                 NavigationRail(
                   backgroundColor: const Color(0xFF261933),
                   selectedIndex: _currentIndex,
-                  onDestinationSelected: (index) => setState(() => _currentIndex = index),
-                  selectedIconTheme: const IconThemeData(color: Colors.white, size: 28),
-                  unselectedIconTheme: const IconThemeData(color: Color(0xFFAD92C9), size: 28),
-                  selectedLabelTextStyle: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                  unselectedLabelTextStyle: const TextStyle(color: Color(0xFFAD92C9), fontSize: 12),
+                  onDestinationSelected: (index) =>
+                      setState(() => _currentIndex = index),
+                  selectedIconTheme:
+                      const IconThemeData(color: Colors.white, size: 28),
+                  unselectedIconTheme:
+                      const IconThemeData(color: Color(0xFFAD92C9), size: 28),
+                  selectedLabelTextStyle: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold),
+                  unselectedLabelTextStyle:
+                      const TextStyle(color: Color(0xFFAD92C9), fontSize: 12),
                   labelType: NavigationRailLabelType.all,
                   destinations: const [
                     NavigationRailDestination(
@@ -115,7 +123,8 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                   ],
                 ),
-                const VerticalDivider(thickness: 1, width: 1, color: Color(0xFF362348)),
+                const VerticalDivider(
+                    thickness: 1, width: 1, color: Color(0xFF362348)),
                 Expanded(
                   child: IndexedStack(
                     index: _currentIndex,

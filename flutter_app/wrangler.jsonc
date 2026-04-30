@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "pulse-stroll-web",
+  "pages_build_output_dir": "./build/web",
+  "compatibility_date": "2026-04-30",
+  "vars": {
+    "RAILWAY_API_ORIGIN": "https://pulse-production-62b2.up.railway.app"
+  }
+}

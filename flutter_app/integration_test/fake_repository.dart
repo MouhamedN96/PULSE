@@ -5,8 +5,8 @@ class IntegrationFakeRepository implements StrollRepository {
   @override
   RecommendationBackendStatus get recommendationBackendStatus =>
       const RecommendationBackendStatus(
-        mode: RecommendationBackendMode.ffiFallback,
-        label: 'FFI',
+        mode: RecommendationBackendMode.mock,
+        label: 'MOCK',
         detail: 'Fake repository',
       );
 
@@ -88,7 +88,6 @@ class IntegrationFakeRepository implements StrollRepository {
 
   @override
   Future<void> initialize({
-    String? databasePath,
     String? recommendationApiBaseUrl,
   }) async {}
 
