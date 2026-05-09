@@ -110,6 +110,7 @@ enum ProviderKind {
     OpenRouter,
     HuggingFace,
     Gemini,
+    Ollama,
 }
 
 impl ProviderKind {
@@ -119,6 +120,7 @@ impl ProviderKind {
             "openrouter" => Some(Self::OpenRouter),
             "huggingface" => Some(Self::HuggingFace),
             "gemini" => Some(Self::Gemini),
+            "ollama" => Some(Self::Ollama),
             _ => None,
         }
     }
@@ -144,6 +146,13 @@ struct GeminiConfig {
     endpoint: Option<String>,
 }
 
+#[derive(Debug, Clone)]
+struct OllamaConfig {
+    endpoint: String,
+    model: String,
+    api_key: Option<String>,
+}
+
 #[derive(Clone)]
 struct AppState {
     core: Arc<StrollCore>,
@@ -152,6 +161,7 @@ struct AppState {
     openrouter: Option<OpenRouterConfig>,
     huggingface: Option<HuggingFaceConfig>,
     gemini: Option<GeminiConfig>,
+    ollama: Option<OllamaConfig>,
     google_places_api_key: Option<String>,
     openweathermap_api_key: Option<String>,
     fixture_activities: Arc<Vec<Activity>>,
@@ -159,8 +169,9 @@ struct AppState {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Load .env file (silently skip if not found)
+    // Load .env file (silently skip if not found) — check cwd and parent
     let _ = dotenvy::dotenv();
+    let _ = dotenvy::from_filename("../.env");
 
     let port = std::env::var("PORT")
         .or_else(|_| std::env::var("PULSE_API_PORT"))
@@ -185,6 +196,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         fixture_activities.len()
     );
 
+    let ollama_config = load_ollama_config();
+    if let Some(ref cfg) = ollama_config {
+        let key_status = if cfg.api_key.is_some() { "SET" } else { "NOT SET" };
+        println!("[OLLAMA] Configured: model={} endpoint={} api_key={}", cfg.model, cfg.endpoint, key_status);
+    }
+
     let state = AppState {
         core: Arc::new(core),
         http_client: Client::new(),
@@ -192,6 +209,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         openrouter: load_openrouter_config(),
         huggingface: load_huggingface_config(),
         gemini: load_gemini_config(),
+        ollama: ollama_config,
         google_places_api_key: std::env::var("GOOGLE_PLACES_API_KEY").ok(),
         openweathermap_api_key: std::env::var("OPENWEATHER_API_KEY").ok(),
         fixture_activities,
@@ -870,6 +888,21 @@ async fn maybe_enhance_summary(
             .await?;
             Ok(Some(summary))
         }
+        ProviderKind::Ollama => {
+            let config = state.ollama.as_ref().ok_or_else(|| {
+                ApiError::provider_error("Ollama is not configured. Set OLLAMA_ENDPOINT or use defaults.")
+            })?;
+
+            let summary = generate_ollama_summary(
+                &state.http_client,
+                config,
+                query,
+                activities,
+                &context_str,
+            )
+            .await?;
+            Ok(Some(summary))
+        }
     }
 }
 
@@ -1308,4 +1341,94 @@ fn load_gemini_config() -> Option<GeminiConfig> {
         model,
         endpoint,
     })
+}
+
+fn load_ollama_config() -> Option<OllamaConfig> {
+    let api_key = std::env::var("OLLAMA_API_KEY").ok().filter(|v| !v.trim().is_empty());
+    // Default to cloud endpoint when API key is set, local otherwise
+    let default_endpoint = if api_key.is_some() {
+        "https://ollama.com".to_string()
+    } else {
+        "http://localhost:11434".to_string()
+    };
+    let endpoint = std::env::var("OLLAMA_ENDPOINT")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or(default_endpoint);
+    let model = std::env::var("OLLAMA_MODEL")
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or_else(|| "gemma4:e2b".to_string());
+
+    Some(OllamaConfig { endpoint, model, api_key })
+}
+
+async fn generate_ollama_summary(
+    client: &Client,
+    config: &OllamaConfig,
+    query: &str,
+    activities: &[Activity],
+    context: &str,
+) -> Result<String, ApiError> {
+    let prompt = build_summary_prompt(query, activities, context);
+    let url = format!("{}/api/chat", config.endpoint.trim_end_matches('/'));
+
+    let mut request = client
+        .post(&url)
+        .json(&json!({
+            "model": config.model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You summarize venue recommendations in 2 short sentences with practical tone. Be specific about why each place is worth visiting."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+            "stream": false,
+            "options": {
+                "temperature": 0.3,
+                "num_predict": 120
+            }
+        }));
+
+    // Add Bearer auth for Ollama Cloud
+    if let Some(ref key) = config.api_key {
+        request = request.header("Authorization", format!("Bearer {key}"));
+    }
+
+    let response = request
+        .send()
+        .await
+        .map_err(|error| {
+            ApiError::upstream_error(format!("Ollama request failed: {error}"))
+        })?;
+
+    let status = response.status();
+    let body = response.text().await.map_err(|error| {
+        ApiError::upstream_error(format!("Ollama response read failed: {error}"))
+    })?;
+
+    if !status.is_success() {
+        return Err(ApiError::upstream_error(format!(
+            "Ollama returned {status}: {body}"
+        )));
+    }
+
+    let parsed: Value = serde_json::from_str(&body).map_err(|error| {
+        ApiError::upstream_error(format!("Ollama response JSON invalid: {error}"))
+    })?;
+
+    // Ollama /api/chat response: { "message": { "content": "..." } }
+    let summary = parsed
+        .get("message")
+        .and_then(|message| message.get("content"))
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| ApiError::upstream_error("Ollama response missing content"))?;
+
+    Ok(summary.to_string())
 }

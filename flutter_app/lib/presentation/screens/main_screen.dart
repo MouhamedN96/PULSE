@@ -4,7 +4,6 @@ import '../../data/stroll_repository.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'discover_world_screen.dart';
 import 'explore_screen.dart';
-import 'feed_screen.dart';
 import 'links_screen.dart';
 import 'profile_screen.dart';
 

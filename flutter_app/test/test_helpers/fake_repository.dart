@@ -15,13 +15,13 @@ class FakeStrollRepository implements StrollRepository {
   RecommendationBackendStatus get recommendationBackendStatus => _backendStatus;
 
   final List<ActivityModel> _activities = [
-    ActivityModel(
+    const ActivityModel(
       id: 'act-1',
       name: 'The Commune Social',
       description: 'Modern tapas restaurant',
       category: 'food',
-      subcategories: const ['spanish'],
-      location: const LocationModel(
+      subcategories: ['spanish'],
+      location: LocationModel(
         lat: 31.2304,
         lng: 121.4737,
         address: '511 Jiangning Rd',
@@ -31,25 +31,25 @@ class FakeStrollRepository implements StrollRepository {
       rating: 4.6,
       reviewCount: 1243,
       priceLevel: 3,
-      images: const [
+      images: [
         'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop',
       ],
       openHours: '11:30 AM - 10:30 PM',
       phone: '+86 21 6047 7638',
       website: null,
-      tags: const ['tapas', 'spanish'],
+      tags: ['tapas', 'spanish'],
       distance: '0.8 km',
       isOpen: true,
       aiSummary: 'A trendy spot for sharing plates with friends.',
       whyRecommended: 'Based on your love for Spanish cuisine.',
     ),
-    ActivityModel(
+    const ActivityModel(
       id: 'act-2',
       name: 'Pure Yoga',
       description: 'Premium yoga studio',
       category: 'wellness',
-      subcategories: const [],
-      location: const LocationModel(
+      subcategories: [],
+      location: LocationModel(
         lat: 31.2284,
         lng: 121.4637,
         address: 'Shanghai Centre',
@@ -59,13 +59,13 @@ class FakeStrollRepository implements StrollRepository {
       rating: 4.8,
       reviewCount: 567,
       priceLevel: 4,
-      images: const [
+      images: [
         'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop',
       ],
       openHours: '6:00 AM - 10:00 PM',
       phone: '+86 21 6279 8778',
       website: null,
-      tags: const ['yoga', 'wellness'],
+      tags: ['yoga', 'wellness'],
       distance: '0.5 km',
       isOpen: true,
       aiSummary: 'Luxury yoga experience with top instructors.',
@@ -73,7 +73,7 @@ class FakeStrollRepository implements StrollRepository {
     ),
   ];
 
-  late final UserModel _user = UserModel(
+  late const UserModel _user = UserModel(
     id: 'user-1',
     name: 'Sarah Kim',
     avatar:

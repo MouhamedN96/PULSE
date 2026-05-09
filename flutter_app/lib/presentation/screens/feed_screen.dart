@@ -109,7 +109,7 @@ class _FeedScreenState extends State<FeedScreen> {
                     child: Row(
                       children: [
                         const SizedBox(width: 16),
-                        Icon(Icons.auto_awesome, color: const Color(0xFF7F13EC), size: 22),
+                        const Icon(Icons.auto_awesome, color: Color(0xFF7F13EC), size: 22),
                         const SizedBox(width: 12),
                         Expanded(
                           child: TextField(
@@ -252,7 +252,7 @@ class _FeedScreenState extends State<FeedScreen> {
                         children: [
                           const Icon(Icons.cloud_off, color: Color(0xFFAD92C9), size: 48),
                           const SizedBox(height: 12),
-                          Text(
+                          const Text(
                             'Could not load feed',
                             style: TextStyle(color: Colors.white, fontSize: 16),
                           ),

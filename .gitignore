@@ -45,3 +45,11 @@ experiments/fixtures/*.json
 experiments/logs/
 experiments/results/*
 !experiments/results/.gitkeep
+
+# Data / Model files
+*.gguf
+*.jsonl
+*.csv
+
+# Personal / Output documents
+*.docx

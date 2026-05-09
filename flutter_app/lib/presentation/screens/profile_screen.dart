@@ -76,7 +76,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             
             const SizedBox(height: 32),
             
-            Text(
+            const Text(
               'STROLL v1.0.0 • Made with 💜',
               style: TextStyle(
                 color: Colors.white38,
@@ -150,7 +150,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      const Text(
                         'Foodie, traveler, and adventure seeker. Always looking for the next great experience!',
                         textAlign: TextAlign.center,
                         style: TextStyle(
@@ -193,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Divider(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), height: 32),
                       
                       // Stats
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
                           _StatItem(value: '89', label: 'Experiences'),
@@ -458,7 +458,7 @@ class _SettingTile extends StatelessWidget {
         Switch(
           value: value,
           onChanged: onChanged,
-          activeColor: Theme.of(context).colorScheme.primary,
+          activeThumbColor: Theme.of(context).colorScheme.primary,
         ),
       ],
     );

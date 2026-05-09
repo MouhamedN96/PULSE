@@ -18,10 +18,10 @@ class IntegrationFakeRepository implements StrollRepository {
 
   @override
   Future<NetworkResponseModel> getNetwork() async {
-    return NetworkResponseModel(
-      following: const [],
-      suggested: const [],
-      requests: const [
+    return const NetworkResponseModel(
+      following: [],
+      suggested: [],
+      requests: [
         NetworkRequestModel(
           id: 'req-1',
           user: UserModel(
@@ -46,8 +46,8 @@ class IntegrationFakeRepository implements StrollRepository {
 
   @override
   Future<FeedResponseModel> getFeed() async {
-    return FeedResponseModel(
-      recommendations: const [
+    return const FeedResponseModel(
+      recommendations: [
         ActivityModel(
           id: 'act-1',
           name: 'Spot',
@@ -75,8 +75,8 @@ class IntegrationFakeRepository implements StrollRepository {
           whyRecommended: null,
         ),
       ],
-      posts: const [],
-      trendingTags: const ['#tag'],
+      posts: [],
+      trendingTags: ['#tag'],
     );
   }
 

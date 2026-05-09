@@ -92,13 +92,13 @@ class _ExploreScreenState extends State<ExploreScreen> {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(
+            const SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search experiences, dossiers...',
-                    prefixIcon: const Icon(Icons.search_rounded, color: Colors.white70),
+                    prefixIcon: Icon(Icons.search_rounded, color: Colors.white70),
                   ),
                 ),
               ),
