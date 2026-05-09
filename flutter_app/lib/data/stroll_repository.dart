@@ -66,6 +66,11 @@ abstract class StrollRepository {
   Future<List<ActivityModel>> getTrending({String? category});
   Future<void> saveActivity(String activityId);
   Future<List<ActivityModel>> getSavedActivities();
+  Future<List<ActivityModel>> searchPlaces({
+    required String query,
+    required double lat,
+    required double lng,
+  });
   Future<void> dispose();
 }
 
@@ -196,6 +201,16 @@ class MockStrollRepository implements StrollRepository {
   }
 
   @override
+  Future<List<ActivityModel>> searchPlaces({
+    required String query,
+    required double lat,
+    required double lng,
+  }) async {
+    await Future.delayed(const Duration(milliseconds: 800));
+    return [_mockActivity, _mockActivity2];
+  }
+
+  @override
   Future<void> dispose() async {}
 }
 
@@ -290,6 +305,34 @@ class ApiStrollRepository implements StrollRepository {
     return asJsonMap(jsonDecode(response.body));
   }
 
+  Future<List<dynamic>> _postJsonList(
+    String path, {
+    required Map<String, dynamic> body,
+  }) async {
+    final response = await _client.post(
+      _buildUri(path),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'POST $path failed: ${response.statusCode}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+    if (decoded is! List) {
+      throw StrollAppException(
+        code: 'API_ERROR',
+        message: 'POST $path returned an unexpected payload',
+      );
+    }
+
+    return decoded;
+  }
+
   Future<void> _postExpectSuccess(
     String path, {
     required Map<String, dynamic> body,
@@ -370,6 +413,23 @@ class ApiStrollRepository implements StrollRepository {
   @override
   Future<List<ActivityModel>> getSavedActivities() async {
     final decoded = await _getJsonList('/activities/saved');
+    return decoded
+        .map((entry) => ActivityModel.fromJson(asJsonMap(entry)))
+        .toList(growable: false);
+  }
+
+  @override
+  Future<List<ActivityModel>> searchPlaces({
+    required String query,
+    required double lat,
+    required double lng,
+  }) async {
+    final body = {
+      'query': query,
+      'lat': lat,
+      'lng': lng,
+    };
+    final decoded = await _postJsonList('/places/search', body: body);
     return decoded
         .map((entry) => ActivityModel.fromJson(asJsonMap(entry)))
         .toList(growable: false);

@@ -1,22 +1,22 @@
-PULSE 
+PULSE
 
-**AI-powered social activity discovery — find what's happening around you.**
+Social activity discovery and voice-curated recommendations.
 
 > Live at [pulse-production-62b2.up.railway.app](https://pulse-production-62b2.up.railway.app)
 
-PULSE is a PWA that curates nearby restaurants, nightlife, and activities using the Google Places API and Gemini AI. Ask it anything — *"best rooftop bars near me"* — and get smart, distance-aware recommendations with one-tap navigation.
+PULSE is a PWA that curates nearby restaurants, nightlife, and activities using the Google Places API, Yelp and Gemini through API and Finetunned Gemma 4 E2B as default AI
+. Ask it anything — *"best rooftop bars near me"* — and get smart, distance-aware recommendations with one-tap navigation.
 
 
-## What It Does
+## Features
 
--  **Live Search** — Fetches real venues via Google Places API (New) based on your location
--  **AI Summaries** — Gemini generates a quick recommendation blurb for each search
--  **Distance-Aware** — Every card shows how far the venue is from you (Haversine)
--  **Smart Filters** — Nearby · Food · Nightlife · custom searches
--  **One-Tap Navigation** — Open directions in Google Maps or Waze
--  **Ratings & Reviews** — Real Google ratings, price levels, and review counts
--  **Social Network** — Follow friends, discover people, manage requests
--  **Voice Agent** — Natural language activity queries
+- **Live Search** — Uses Google Places and Yelp API to fetch real-world venue data.
+- **Venue Summaries** — Generates short blurbs for search results.
+- **Proximity Ranking** — Distance computed server-side using Haversine formula.
+- **Filters** — Presets for food and nightlife plus custom queries.
+- **Navigation** — Deep links to Google Maps and Waze.
+- **Social Graph** — Follow users and manage friend requests.
+- **Voice Queries** — Natural language activity search.
 
 ---
 
@@ -26,8 +26,8 @@ PULSE is a PWA that curates nearby restaurants, nightlife, and activities using 
 |-------|------|
 | **Frontend** | Flutter (Dart) — PWA, Material 3 |
 | **Backend** | Rust (Axum) — serves API + static PWA |
-| **AI** | Gemini 2.0 Flash — summaries & intent parsing |
-| **Places** | Google Places API (New) — live venue data |
+| **AI** | Gemini 2.0 Flash / Gemma 4-e2b — summaries & intent parsing |
+| **Places** | Google Places API + Yelp — live venue data |
 | **Infra** | Railway (Docker) — single-container deploy |
 | **Database** | PostgreSQL (Railway managed) |
 | **Cache** | Redis (Railway managed) |
@@ -46,7 +46,7 @@ PULSE is a PWA that curates nearby restaurants, nightlife, and activities using 
 │  │  GET /           → Flutter PWA (static/)   │  │
 │  │  GET /api/health → Health check            │  │
 │  │  GET /api/feed   → Google Places + AI      │  │
-│  │  POST /api/recommend → Voice agent         │  │
+│  │  POST /api/recommend → AI agent         │  │
 │  │  GET /api/network    → Social graph        │  │
 │  │  GET /api/trending   → Explore             │  │
 │  └────────────────────────────────────────────┘  │
@@ -74,25 +74,29 @@ PULSE is a PWA that curates nearby restaurants, nightlife, and activities using 
 
 ### Local Development
 
-```bash
-# Clone
-git clone https://github.com/MouhamedN96/PULSE.git
-cd PULSE
+1. **Backend (Rust)**
+   Handles API logic, distance ranking, and AI provider dispatch.
+   ```bash
+   cd rust_core
+   cargo run --bin recommendation_api
+   ```
 
-# Configure environment
-cp .env.example .env
-# Edit .env with your API keys
+2. **Frontend (Flutter)**
+   The mobile/web PWA interface.
+   ```bash
+   cd flutter_app
+   flutter run -d chrome
+   ```
 
-# Run Rust backend
-cd rust_core
-cargo run --bin recommendation_api
-# → PULSE API listening on http://0.0.0.0:8787
-
-# In another terminal — run Flutter
-cd flutter_app
-flutter pub get
-flutter run -d chrome
-```
+3. **Evaluation Dashboard (Streamlit)**
+   For analyzing NDCG, latency, and re-ranker signal ablation.
+   ```bash
+   streamlit run scripts/dashboard.py
+   ```
+   If you need to refresh the results after changing ranking weights, run:
+   ```bash
+   python scripts/eval_advanced.py
+   ```
 
 ### Environment Variables
 
@@ -171,7 +175,7 @@ PULSE/
 
 ---
 
-## Contributing
+## Contributing/Inspiring
 
 1. Fork the repo
 2. Create a feature branch (`git checkout -b feature/my-feature`)
@@ -186,4 +190,4 @@ MIT
 
 ---
 
-Built with Rust 🦀 + Flutter 💙 + Gemini ✨
+Built with Flutter and Rust

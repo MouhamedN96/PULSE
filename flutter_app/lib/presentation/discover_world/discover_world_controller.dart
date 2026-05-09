@@ -155,14 +155,32 @@ class DiscoverWorldController extends ChangeNotifier {
     ));
 
     try {
-      final response = await _repository.processVoiceQuery(
-        query: normalized,
-        location: _currentLocation,
-        provider: provider,
-      );
+      // Parallel calls: one to LLM-powered recommendations, one to raw Google Places search
+      final results = await Future.wait([
+        _repository.processVoiceQuery(
+          query: normalized,
+          location: _currentLocation,
+          provider: provider,
+        ),
+        _repository.searchPlaces(
+          query: normalized,
+          lat: _currentLocation?.lat ?? 40.7128,
+          lng: _currentLocation?.lng ?? -74.0060,
+        ),
+      ]);
 
-      _ingestVoiceResponse(response);
-      _latestSummary = response.summary;
+      final voiceResponse = results[0] as AgentResponseModel;
+      final searchActivities = results[1] as List<ActivityModel>;
+
+      _ingestVoiceResponse(voiceResponse);
+      
+      // Also ingest search results
+      for (final activity in searchActivities) {
+        _catalog[activity.id] = activity;
+        _seenActivityIds.add(activity.id);
+      }
+
+      _latestSummary = voiceResponse.summary;
       _queryHistory.add(
         DiscoverWorldQueryRecord(
           text: normalized,
